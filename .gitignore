@@ -1,0 +1,7 @@
+Doctools.Web/obj/
+Doctools.Web/bin/
+Doctools.Data/bin/Release/Doctools.Data.dll.config
+Doctools.Data/bin/
+Doctools.Data/obj/
+Doctools.Test/bin/
+Doctools.Test/obj/
