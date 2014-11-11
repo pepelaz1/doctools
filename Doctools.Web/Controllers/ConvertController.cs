@@ -15,7 +15,7 @@ using Doctools.Web.Properties;
 using System.Configuration;
 using Doctools.Web.Utils;
 
-public class CompareController : ApiController
+public class ConvertController : ApiController
 {
     public async Task<HttpResponseMessage> PostFile()
     {
@@ -27,7 +27,7 @@ public class CompareController : ApiController
 
         Utils.Authorize(Request);
         
-      /*  try
+        try
         {
             // Read the form data and return an async task.
             var provider = await Request.Content.ReadAsMultipartAsync();
@@ -125,7 +125,7 @@ public class CompareController : ApiController
 
             return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
 
-        }*/
-        return new HttpResponseMessage(HttpStatusCode.OK);
-    }
+        }
+    }    
+   
 }
