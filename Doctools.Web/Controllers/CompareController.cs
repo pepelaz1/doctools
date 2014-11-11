@@ -27,7 +27,7 @@ public class CompareController : ApiController
 
         Utils.Authorize(Request);
         
-      /*  try
+        try
         {
             // Read the form data and return an async task.
             var provider = await Request.Content.ReadAsMultipartAsync();
@@ -125,7 +125,6 @@ public class CompareController : ApiController
 
             return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
 
-        }*/
-        return new HttpResponseMessage(HttpStatusCode.OK);
+        }      
     }
 }

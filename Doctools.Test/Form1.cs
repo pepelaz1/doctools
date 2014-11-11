@@ -144,7 +144,7 @@ namespace Doctools.Test
         {
             cmbReportType.SelectedIndex = 0;
             cmbOuputFormat.SelectedIndex = 0;
-           // tbURL.Text = "http://localhost:58484/api/compare";
+            tbURL.Text = "http://localhost:58484/api/compare";
         }
 
         
