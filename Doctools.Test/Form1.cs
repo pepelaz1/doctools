@@ -20,11 +20,24 @@ using System.Windows.Forms;
 
 namespace Doctools.Test
 {
+    public class DocContentType
+    {
+        public static string Docx = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        public static string Pdf = "application/pdf";
+        public static string Html = "text/html";
+        
+    };
+
     public partial class Form1 : Form
     {
+        Dictionary<string, string> _doc_types = new Dictionary<string, string>();
+        
         public Form1()
         {
             InitializeComponent();
+            _doc_types.Add("docx", DocContentType.Docx);
+            _doc_types.Add("pdf", DocContentType.Pdf);
+            _doc_types.Add("html", DocContentType.Html);
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -81,7 +94,7 @@ namespace Doctools.Test
                 using (var client = new HttpClient(httpClientHandler))
                 //using (var client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Authorization = CreateBasicHeader(tbUsername.Text, tbPassword.Text);
+                    client.DefaultRequestHeaders.Authorization = CreateBasicHeader(tbUsernameCompare.Text, tbPasswordCompare.Text);
 
                     using (var formData = new MultipartFormDataContent())
                     {
@@ -94,7 +107,7 @@ namespace Doctools.Test
                         // Actually invoke the request to the server
 
                         // equivalent to (action="{url}" method="post")
-                        response = client.PostAsync(tbURL.Text, formData).Result;
+                        response = client.PostAsync(tbUrlCompare.Text, formData).Result;
                         if (response.StatusCode != HttpStatusCode.OK)
                         {
                             tbCompareResult.Text = response.ToString();
@@ -144,7 +157,35 @@ namespace Doctools.Test
         {
             cmbReportType.SelectedIndex = 0;
             cmbOuputFormat.SelectedIndex = 0;
-            tbURL.Text = "http://localhost:58484/api/compare";
+          //  tbUrlCompare.Text = "http://localhost:58484/api/compare";
+            tbUrlConvert.Text = "http://localhost:58484/api/convert";
+        }
+
+        private void btnConvert_Click(object sender, EventArgs e)
+        {
+            HttpWebResponse response = null;
+              try
+              {
+                  Cursor = Cursors.WaitCursor;
+                  HttpWebRequest request=(HttpWebRequest)WebRequest.Create(tbUrlConvert.Text);
+                  request.ContentType = DocContentType.Docx;
+                  request.Accept= "application/pdf";
+                  request.Method = "POST";
+                  request.Headers.Add("Authorization",CreateBasicHeader(tbUsernameConvert.Text, tbPasswordConvert.Text).ToString());
+                  byte[] data = File.ReadAllBytes(tbFileToConvert.Text);
+                  request.GetRequestStream().Write(data, 0, data.Length);
+
+                  response = (HttpWebResponse)request.GetResponse();
+
+
+                  int t = 4;
+
+              }
+              finally
+              {
+                  Cursor = Cursors.Default;
+
+              }
         }
 
         

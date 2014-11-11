@@ -1,10 +1,10 @@
-﻿<div>Upload these 2 files:</div>
+<div>Upload these 2 files:</div>
 <ul>
     <li>Master: <a href="https://dl.dropboxusercontent.com/u/101928943/futurama.docx">futurama.docx</a></li>
     <li>Source: <a href="https://dl.dropboxusercontent.com/u/101928943/futurama%20modified.docx">futurama modified.docx</a></li>
 </ul>
 
-<form action="api/compare" target="_blank" method="post" enctype="multipart/form-data">
+<form action="http://localhost:50488/api/compare" target="_blank" method="post" enctype="multipart/form-data">
     <div>Master <input type="file" name="master" /></div>
     <div>Source <input type="file" name="source" /></div>
     <input type="submit" value="Submit">

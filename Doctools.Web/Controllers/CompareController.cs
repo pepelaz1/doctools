@@ -17,6 +17,12 @@ using Doctools.Web.Utils;
 
 public class CompareController : ApiController
 {
+    //public HttpResponseMessage Post()
+    //{
+    //    return new HttpResponseMessage(HttpStatusCode.OK);
+    //}
+
+
     public async Task<HttpResponseMessage> PostFile()
     {
         // Check if the request contains multipart/form-data.
@@ -25,7 +31,7 @@ public class CompareController : ApiController
             throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
         }
 
-        Utils.Authorize(Request);
+       // Utils.Authorize(Request);
         
         try
         {
@@ -33,34 +39,40 @@ public class CompareController : ApiController
             var provider = await Request.Content.ReadAsMultipartAsync();
             byte[] data1 = null;
             byte[] data2 = null;
-            string master_name = "";
-            string source_name = "";
+            string master_name = "test1.txt";
+            string source_name = "test2.txt";
             string report_type = "all-in-one";
 
         
             foreach (var item in provider.Contents)
             {
-                if (item.Headers.ContentDisposition.Name == "master")
+                string name = item.Headers.ContentDisposition.Name.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower();
+                if (name == "master")
                 {
                     Task<byte[]> t = item.ReadAsByteArrayAsync();
                     t.Wait();
                     data1 = t.Result;
+
+                    master_name = Path.GetFileName(item.Headers.ContentDisposition.FileName.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower());
+
                 }
-                if (item.Headers.ContentDisposition.Name == "source")
+                if (name == "source")
                 {
                     Task<byte[]> t = item.ReadAsByteArrayAsync();
                     t.Wait();
                     data2 = t.Result;
+
+                    source_name = Path.GetFileName(item.Headers.ContentDisposition.FileName.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower());
                 }
-                if (item.Headers.ContentDisposition.Name == "master_name")
-                {
-                    master_name = await item.ReadAsStringAsync();
-                }
-                if (item.Headers.ContentDisposition.Name == "source_name")
-                {
-                    source_name = await item.ReadAsStringAsync();
-                }
-                if (item.Headers.ContentDisposition.Name == "report_type")
+                //if (name == "master_name")
+                //{
+                //    master_name = await item.ReadAsStringAsync();
+                //}
+                //if (name == "source_name")
+                //{
+                //    source_name = await item.ReadAsStringAsync();
+                //}
+                if (name == "report_type")
                 {
                     report_type = await item.ReadAsStringAsync();
                 }
@@ -113,7 +125,13 @@ public class CompareController : ApiController
             File.Delete(filename2);
             File.Delete(outfilename);
 
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Convert.ToBase64String(output)) };
+            //HttpResponseMessage response = new HttpResponseMessage();
+            //response.Content = new ByteArrayContent(bytesInStream);
+            //response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+            //return response;
+
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(output) };
         }
         catch (System.Exception e)
         {

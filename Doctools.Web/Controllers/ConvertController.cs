@@ -14,24 +14,40 @@ using System.Threading;
 using Doctools.Web.Properties;
 using System.Configuration;
 using Doctools.Web.Utils;
+using System.Net.Http.Headers;
 
 public class ConvertController : ApiController
 {
     public async Task<HttpResponseMessage> PostFile()
     {
-        // Check if the request contains multipart/form-data.
-        if (!Request.Content.IsMimeMultipartContent())
-        {
-            throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-        }
+        //// Check if the request contains multipart/form-data.
+        //if (!Request.Content.IsMimeMultipartContent())
+        //{
+        //    throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+        //}
 
         Utils.Authorize(Request);
         
-       /* try
+        // application/pdf
+        // application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        // text/html 
+        // multipart/form-data
+
+        try
         {
             // Read the form data and return an async task.
-            var provider = await Request.Content.ReadAsMultipartAsync();
-            byte[] data1 = null;
+            var stream = await Request.Content.ReadAsStreamAsync();
+            string outfilename = @"c:\\in\\output.docx";
+
+            FileStream fileStream = File.Create(outfilename);
+            // Initialize the bytes array with the stream length and then fill it with data
+            byte[] bytesInStream = new byte[stream.Length];
+            stream.Read(bytesInStream, 0, bytesInStream.Length);
+            // Use write method to write to the file specified above
+            fileStream.Write(bytesInStream, 0, bytesInStream.Length);
+            fileStream.Close();
+
+          /*  byte[] data1 = null;
             byte[] data2 = null;
             string master_name = "";
             string source_name = "";
@@ -113,7 +129,12 @@ public class ConvertController : ApiController
             File.Delete(filename2);
             File.Delete(outfilename);
 
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Convert.ToBase64String(output)) };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Convert.ToBase64String(output)) };*/
+            HttpResponseMessage response = new HttpResponseMessage();
+            response.Content = new ByteArrayContent(bytesInStream);
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+            return response;
         }
         catch (System.Exception e)
         {
@@ -125,8 +146,7 @@ public class ConvertController : ApiController
 
             return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
 
-        }*/
-        return new HttpResponseMessage(HttpStatusCode.OK);
+        }      
     }    
    
 }
