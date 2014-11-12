@@ -47,7 +47,7 @@ public class CompareController : ApiController
             foreach (var item in provider.Contents)
             {
                 string name = item.Headers.ContentDisposition.Name.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower();
-                if (name == "master")
+                if (name == "original")
                 {
                     Task<byte[]> t = item.ReadAsByteArrayAsync();
                     t.Wait();
@@ -56,7 +56,7 @@ public class CompareController : ApiController
                     master_name = Path.GetFileName(item.Headers.ContentDisposition.FileName.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower());
 
                 }
-                if (name == "source")
+                if (name == "modified")
                 {
                     Task<byte[]> t = item.ReadAsByteArrayAsync();
                     t.Wait();
@@ -91,18 +91,19 @@ public class CompareController : ApiController
             File.WriteAllBytes(filename2, data2);
             
             // make output filename
-            string outfilename = path + "\\output.html";
+            string outfilename = path + "\\output.rtf";
+            string outfilename2 = path + "\\output.html";
             string logfile = path + "\\diffdoc.log";
 
 
            
             // construct command line
-            string cmdline = @"/S" + filename1 + " /M" + filename2 + " /T" + outfilename + " /L" + logfile + " /R1 /X";
+            string cmdline = @"/S" + filename1 + " /M" + filename2 + " /T" + outfilename + " /L" + logfile + " /R4 /X";
             if (report_type == "all-in-one")
                 cmdline += " /F1";
             else if (report_type == "side-by-side")
                 cmdline += " /F2";
-                        
+         
             //String source = Assembly.GetExecutingAssembly().GetName().FullName;
             //if (!EventLog.SourceExists(source))
             //    EventLog.CreateEventSource(source, "Application");
@@ -112,19 +113,27 @@ public class CompareController : ApiController
             process.WaitForExit();
             Utils.WaitForFile(outfilename);
 
+            cmdline = "/S" + outfilename + " /T" + outfilename2 + "  /M1 /C2 /A1 /A9  /A10";
+            process = Process.Start(@"C:\Program Files (x86)\Softinterface, Inc\Convert Doc\ConvertDoc.EXE", cmdline);
+            process.WaitForExit();
+            Utils.WaitForFile(outfilename2);
+
+            
+
             // make comparsion ( using ActiveX )
             // clsDiffDoc dd = new clsDiffDoc();
             // dd.DoCommandLine(cmdline);
 
             dynamic op = new ExpandoObject();
-            byte[] output = File.ReadAllBytes(outfilename);
+            byte[] output = File.ReadAllBytes(outfilename2);
 
 
             // delete temp files
             File.Delete(filename1);
             File.Delete(filename2);
             File.Delete(outfilename);
-
+            File.Delete(outfilename2);
+            File.Delete(logfile);
             //HttpResponseMessage response = new HttpResponseMessage();
             //response.Content = new ByteArrayContent(bytesInStream);
             //response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
