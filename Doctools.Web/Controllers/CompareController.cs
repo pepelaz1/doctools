@@ -39,9 +39,9 @@ public class CompareController : ApiController
             var provider = await Request.Content.ReadAsMultipartAsync();
             byte[] data1 = null;
             byte[] data2 = null;
-            string master_name = "test1.txt";
-            string source_name = "test2.txt";
-            string report_type = "all-in-one";
+            string master_name = null;
+            string source_name = null;
+            string report_type = null;
 
         
             foreach (var item in provider.Contents)
@@ -64,25 +64,24 @@ public class CompareController : ApiController
 
                     source_name = Path.GetFileName(item.Headers.ContentDisposition.FileName.TrimStart("\"".ToCharArray()).TrimEnd("\"".ToCharArray()).ToLower());
                 }
-                //if (name == "master_name")
-                //{
-                //    master_name = await item.ReadAsStringAsync();
-                //}
-                //if (name == "source_name")
-                //{
-                //    source_name = await item.ReadAsStringAsync();
-                //}
                 if (name == "report_type")
                 {
                     report_type = await item.ReadAsStringAsync();
                 }
             }
+            if (master_name == null || data1 == null)
+            { throw new Exception("No form part named 'original'"); }
+
+            if (source_name == null || data2 == null)
+            { throw new Exception("No form part named 'modified'"); }
+
+            if (report_type == null)
+            { throw new Exception("No form part named 'report_type'"); }
+
             
             // get output folder
             string path = Path.GetTempPath() + Guid.NewGuid();
             Directory.CreateDirectory(path);
-            // string path = @"c:\In";
-
 
             string filename1 = path + "\\" + master_name;
             string filename2 = path + "\\" + source_name;
@@ -104,11 +103,6 @@ public class CompareController : ApiController
             else if (report_type == "side-by-side")
                 cmdline += " /F2";
          
-            //String source = Assembly.GetExecutingAssembly().GetName().FullName;
-            //if (!EventLog.SourceExists(source))
-            //    EventLog.CreateEventSource(source, "Application");
-            //EventLog.WriteEntry(source, cmdline, EventLogEntryType.Information);
-
             var process = Process.Start(@"C:\Program Files (x86)\Softinterface, Inc\DiffDoc\DiffDoc.EXE", cmdline);
             process.WaitForExit();
             Utils.WaitForFile(outfilename);
@@ -117,12 +111,10 @@ public class CompareController : ApiController
             process = Process.Start(@"C:\Program Files (x86)\Softinterface, Inc\Convert Doc\ConvertDoc.EXE", cmdline);
             process.WaitForExit();
             Utils.WaitForFile(outfilename2);
-
-            
-
-            // make comparsion ( using ActiveX )
-            // clsDiffDoc dd = new clsDiffDoc();
-            // dd.DoCommandLine(cmdline);
+            if (!File.Exists(outfilename))
+            {
+                throw new Exception("Unknown error. See log: \r\n" + File.ReadAllText(logfile));
+            }
 
             dynamic op = new ExpandoObject();
             byte[] output = File.ReadAllBytes(outfilename2);
@@ -134,24 +126,24 @@ public class CompareController : ApiController
             File.Delete(outfilename);
             File.Delete(outfilename2);
             File.Delete(logfile);
-            //HttpResponseMessage response = new HttpResponseMessage();
-            //response.Content = new ByteArrayContent(bytesInStream);
-            //response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-
-            //return response;
 
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(output) };
         }
         catch (System.Exception e)
         {
-            String source = Assembly.GetExecutingAssembly().GetName().FullName;
-            if (!EventLog.SourceExists(source))
-                EventLog.CreateEventSource(source, "Application");
-
-            EventLog.WriteEntry(source, e.ToString(), EventLogEntryType.Error);
-
-            return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            return new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(err_desc(e)) };
 
         }      
+    }
+    private string err_desc(Exception e)
+    {
+        string tmp = "Message: " + e.Message;
+        tmp += "\r\nSource: " + e.Source;
+        tmp += "\r\nStackTrace: " + e.StackTrace;
+        if (e.InnerException != null)
+        {
+            tmp += "\r\nInnerException: " + err_desc(e.InnerException);
+        }    
+        return tmp;
     }
 }

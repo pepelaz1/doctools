@@ -20,19 +20,10 @@ public class ConvertController : ApiController
 {
     public async Task<HttpResponseMessage> PostFile()
     {
-        //// Check if the request contains multipart/form-data.
-
-        
         //Utils.Authorize(Request);
-        
-        // application/pdf
-        // application/vnd.openxmlformats-officedocument.wordprocessingml.document
-        // text/html 
-        // multipart/form-data
 
         try
         {
-            //object provider;
                 if (Request.Content.IsMimeMultipartContent())
                 {
                     // Read the form data and return an async task.
@@ -42,13 +33,14 @@ public class ConvertController : ApiController
                     string path = Path.GetTempPath() + Guid.NewGuid();
                     Directory.CreateDirectory(path);
 
-                    string infile = "";
+                    string infile = null;
 
 
                     byte[] data1 = null;
                     string in_type = null;
                     string file_type = null;
-                    string dest_type = "2"; //HTML
+                    string dest_type = null;
+                    string output_content_type = "text/html";
 
 
 
@@ -75,7 +67,8 @@ public class ConvertController : ApiController
                         case "application/pdf":
                             if (dest_type == "pdf")
                             {
-                                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                return MakeResponse(file_type, data1);
                             }
                             else
                             {
@@ -83,9 +76,11 @@ public class ConvertController : ApiController
                                 {
                                     case "html":
                                         in_type = "/M3 /C2";
+                                        output_content_type = "text/html";
                                         break;
                                     case "docx":
                                         in_type = "/M3 /C3";
+                                        output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
                                 }
 
@@ -95,7 +90,8 @@ public class ConvertController : ApiController
                         case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                             if (dest_type == "docx")
                             {
-                                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                return MakeResponse(file_type, data1);
                             }
                             else
                             {
@@ -103,9 +99,11 @@ public class ConvertController : ApiController
                                 {
                                     case "html":
                                         in_type = "/M1 /C10";
+                                        output_content_type = "text/html";
                                         break;
                                     case "pdf":
                                         in_type = "/M1 /C17";
+                                        output_content_type = "application/pdf";
                                         break;
                                 }
                             }
@@ -114,7 +112,8 @@ public class ConvertController : ApiController
                         case "text/html":
                             if (dest_type == "html")
                             {
-                                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
+                                return MakeResponse(file_type, data1);
                             }
                             else
                             {
@@ -122,9 +121,11 @@ public class ConvertController : ApiController
                                 {
                                     case "pdf":
                                         in_type = "/M2 /F4 /C12";
+                                        output_content_type = "application/pdf";
                                         break;
                                     case "docx":
                                         in_type = "/M2 /F4 /C13";
+                                        output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
                                 }
                             }
@@ -132,12 +133,20 @@ public class ConvertController : ApiController
                             break;
                     }
 
+                    if (infile == null)
+                    { throw new Exception("Unrecognized file type"); }
+
+                    if (data1 == null)
+                    { throw new Exception("No form part named 'file'"); }
+
+                    if (dest_type == null)
+                    { throw new Exception("Unrecognized output file type"); }
 
                     File.WriteAllBytes(infile, data1);
 
 
                     // make output filename
-                    string outfilename = path + "\\output.html";
+                    string outfilename = path + "\\output."+dest_type;
                     string logfile = path + "\\diffdoc.log";
 
                     // construct command line
@@ -147,6 +156,10 @@ public class ConvertController : ApiController
                     var process = Process.Start(@"C:\Program Files (x86)\Softinterface, Inc\Convert Doc\ConvertDoc.EXE", cmdline);
                     process.WaitForExit();
                     Utils.WaitForFile(outfilename);
+                    if (!File.Exists(outfilename))
+                    {
+                        throw new Exception("Unknown error. See log: \r\n" + File.ReadAllText(logfile));
+                    }
 
                     dynamic op = new ExpandoObject();
                     byte[] output = File.ReadAllBytes(outfilename);
@@ -157,28 +170,42 @@ public class ConvertController : ApiController
                     File.Delete(logfile);
                     File.Delete(outfilename);
 
-                    return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(output) };
+                    return MakeResponse(output_content_type, output);
                 }
-            /*
-            if (Request.Content.IsHttpRequestMessageContent())
-            {
-                var provider = await Request.Content.ReadAsHttpRequestMessageAsync();
-                return new HttpResponseMessage(HttpStatusCode.OK);
-            }*/
+                else
+                {
+                    return new HttpResponseMessage(HttpStatusCode.UnsupportedMediaType) { Content = new StringContent("Only multipart/form-data supported.") };
+                }
 
-            throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+               
         }
         catch (System.Exception e)
         {
-            String source = Assembly.GetExecutingAssembly().GetName().FullName;
-            if (!EventLog.SourceExists(source))
-                EventLog.CreateEventSource(source, "Application");
-
-            EventLog.WriteEntry(source, e.ToString(), EventLogEntryType.Error);
-
-            return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+            return new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(err_desc(e)) };
 
         }      
-    }    
-   
+    }
+
+
+    private HttpResponseMessage MakeResponse(string content_type, byte[] output)
+    {
+        HttpResponseMessage resp = new HttpResponseMessage();
+        resp.StatusCode = HttpStatusCode.OK;
+        resp.Content = new ByteArrayContent(output);
+        resp.Content.Headers.ContentType = new MediaTypeHeaderValue(content_type);
+        return resp;
+    }
+
+
+    private string err_desc(Exception e)
+    {
+        string tmp = "Message: " + e.Message;
+        tmp += "\r\nSource: " + e.Source;
+        tmp += "\r\nStackTrace: " + e.StackTrace;
+        if (e.InnerException != null)
+        {
+            tmp += "\r\nInnerException: " + err_desc(e.InnerException);    
+        }        
+       return tmp;
+    }
 }
