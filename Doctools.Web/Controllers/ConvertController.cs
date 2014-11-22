@@ -65,7 +65,7 @@ public class ConvertController : ApiController
                     switch (file_type)
                     {
                         case "application/pdf":
-                            if (dest_type == "pdf")
+                            if (dest_type == "pdf" || dest_type == "application/pdf")
                             {
                                 //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
                                 return MakeResponse(file_type, data1);
@@ -78,7 +78,15 @@ public class ConvertController : ApiController
                                         in_type = "/M3 /C2";
                                         output_content_type = "text/html";
                                         break;
+                                    case "text/html":
+                                        in_type = "/M3 /C2";
+                                        output_content_type = "text/html";
+                                        break;
                                     case "docx":
+                                        in_type = "/M3 /C3";
+                                        output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                                        break;
+                                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                                         in_type = "/M3 /C3";
                                         output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
@@ -88,7 +96,7 @@ public class ConvertController : ApiController
                             }
                             break;
                         case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                            if (dest_type == "docx")
+                            if (dest_type == "docx" || dest_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                             {
                                 //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
                                 return MakeResponse(file_type, data1);
@@ -101,7 +109,15 @@ public class ConvertController : ApiController
                                         in_type = "/M1 /C10";
                                         output_content_type = "text/html";
                                         break;
+                                    case "text/html":
+                                        in_type = "/M1 /C10";
+                                        output_content_type = "text/html";
+                                        break;
                                     case "pdf":
+                                        in_type = "/M1 /C17";
+                                        output_content_type = "application/pdf";
+                                        break;
+                                    case "application/pdf":
                                         in_type = "/M1 /C17";
                                         output_content_type = "application/pdf";
                                         break;
@@ -110,7 +126,7 @@ public class ConvertController : ApiController
                             infile = path + "\\in.docx";
                             break;
                         case "text/html":
-                            if (dest_type == "html")
+                            if (dest_type == "html" || dest_type == "text/html")
                             {
                                 //return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data1) };
                                 return MakeResponse(file_type, data1);
@@ -123,7 +139,15 @@ public class ConvertController : ApiController
                                         in_type = "/M2 /F4 /C12";
                                         output_content_type = "application/pdf";
                                         break;
+                                    case "application/pdf":
+                                        in_type = "/M2 /F4 /C12";
+                                        output_content_type = "application/pdf";
+                                        break;
                                     case "docx":
+                                        in_type = "/M2 /F4 /C13";
+                                        output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                                        break;
+                                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                                         in_type = "/M2 /F4 /C13";
                                         output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
