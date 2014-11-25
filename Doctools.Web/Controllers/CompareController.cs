@@ -1,5 +1,4 @@
-﻿using DiffDoc;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
@@ -41,7 +40,7 @@ public class CompareController : ApiController
             byte[] data2 = null;
             string master_name = null;
             string source_name = null;
-            string report_type = null;
+            string report_type = "all-in-one";
 
         
             foreach (var item in provider.Contents)
@@ -75,8 +74,8 @@ public class CompareController : ApiController
             if (source_name == null || data2 == null)
             { throw new Exception("No form part named 'modified'"); }
 
-            if (report_type == null)
-            { throw new Exception("No form part named 'report_type'"); }
+          //  if (report_type == null)
+          //  { throw new Exception("No form part named 'report_type'"); }
 
             
             // get output folder
