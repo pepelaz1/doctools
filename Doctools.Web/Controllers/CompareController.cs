@@ -106,7 +106,7 @@ public class CompareController : ApiController
             process.WaitForExit();
             Utils.WaitForFile(outfilename);
 
-            cmdline = "/S" + outfilename + " /T" + outfilename2 + "  /M1 /C10 /A1 /A9  /A10";
+            cmdline = "/S" + outfilename + " /T" + outfilename2 + "  /M1 /C10";
             process = Process.Start(@"C:\Program Files (x86)\Softinterface, Inc\Convert Doc\ConvertDoc.EXE", cmdline);
             process.WaitForExit();
             Utils.WaitForFile(outfilename2);

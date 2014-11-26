@@ -82,11 +82,11 @@ public class ConvertController : ApiController
                                         output_content_type = "text/html";
                                         break;
                                     case "docx":
-                                        in_type = "/M3 /C3";
+                                        in_type = " /C4 /M3";
                                         output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
                                     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                                        in_type = "/M3 /C3";
+                                        in_type = " /C4 /M3";
                                         output_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                                         break;
                                 }
@@ -105,11 +105,11 @@ public class ConvertController : ApiController
                                 switch (dest_type)
                                 {
                                     case "html":
-                                        in_type = "/M1 /C10";
+                                        in_type = "/F13 /C4 /M2";
                                         output_content_type = "text/html";
                                         break;
                                     case "text/html":
-                                        in_type = "/M1 /C10";
+                                        in_type = "/F13 /C4 /M2";
                                         output_content_type = "text/html";
                                         break;
                                     case "pdf":
@@ -183,10 +183,26 @@ public class ConvertController : ApiController
                     {
                         throw new Exception("Unknown error. See log: \r\n" + File.ReadAllText(logfile));
                     }
+                    
+                    if (dest_type.Contains("html") && Directory.Exists(path+"\\output_Images"))
+                    {
+                        //html converter
+                        //convert images
+                        string[] img = Directory.GetFiles(path + "\\output_Images");
+                        string content = File.ReadAllText(outfilename);
+                        for (int i = 0; i < img.Length; i++)
+                        {
+                            FileInfo fi = new FileInfo(img[i]);
+                           content=content.Replace("file:///"+path.Replace("\\","/") + "/","").Replace(String.Format("output_Images/{0}",fi.Name), "data:image/gif;base64," + Convert.ToBase64String(File.ReadAllBytes(img[i])));
+                        }
+                        File.WriteAllText(outfilename,content);
+                    }
 
                     dynamic op = new ExpandoObject();
                     byte[] output = File.ReadAllBytes(outfilename);
+                    
 
+                    
 
                     // delete temp files
                     File.Delete(infile);
