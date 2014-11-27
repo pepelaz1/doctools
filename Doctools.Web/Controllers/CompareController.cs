@@ -120,14 +120,14 @@ public class CompareController : ApiController
             string[] img = Directory.GetFiles(path,"output_image*");
             if (img.Length > 0)
             {
-                string content = File.ReadAllText(outfilename2);
+                string content = File.ReadAllText(outfilename2, Encoding.GetEncoding(1252));
                 for (int i = 0; i < img.Length; i++)
                 {
                     FileInfo fi = new FileInfo(img[i]);
                     content = content.Replace(String.Format("{0}", fi.Name), "data:image/gif;base64," + Convert.ToBase64String(File.ReadAllBytes(img[i])));
                     File.Delete(img[i]);
                 }
-                File.WriteAllText(outfilename2, content);
+                File.WriteAllText(outfilename2, content, Encoding.GetEncoding(1252));
             }
           
 

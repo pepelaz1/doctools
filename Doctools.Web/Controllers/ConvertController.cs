@@ -189,13 +189,15 @@ public class ConvertController : ApiController
                         //html converter
                         //convert images
                         string[] img = Directory.GetFiles(path + "\\output_Images");
-                        string content = File.ReadAllText(outfilename);
+                        string content = File.ReadAllText(outfilename, Encoding.GetEncoding(1252));
                         for (int i = 0; i < img.Length; i++)
                         {
                             FileInfo fi = new FileInfo(img[i]);
                            content=content.Replace("file:///"+path.Replace("\\","/") + "/","").Replace(String.Format("output_Images/{0}",fi.Name), "data:image/gif;base64," + Convert.ToBase64String(File.ReadAllBytes(img[i])));
+                            fi.Delete();                       
                         }
-                        File.WriteAllText(outfilename,content);
+                        File.WriteAllText(outfilename, content, Encoding.GetEncoding(1252));
+                        Directory.Delete(path + "\\output_Images", true);
                     }
 
                     dynamic op = new ExpandoObject();
@@ -208,7 +210,7 @@ public class ConvertController : ApiController
                     File.Delete(infile);
                     File.Delete(logfile);
                     File.Delete(outfilename);
-                    Directory.Delete(path + "\\output_Images");
+                    
 
                     return MakeResponse(output_content_type, output);
                 }
