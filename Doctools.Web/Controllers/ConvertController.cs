@@ -208,6 +208,7 @@ public class ConvertController : ApiController
                     File.Delete(infile);
                     File.Delete(logfile);
                     File.Delete(outfilename);
+                    Directory.Delete(path + "\\output_Images");
 
                     return MakeResponse(output_content_type, output);
                 }

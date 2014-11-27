@@ -115,6 +115,22 @@ public class CompareController : ApiController
                 throw new Exception("Unknown error. See log: \r\n" + File.ReadAllText(logfile));
             }
 
+            //html converter
+            //convert images
+            string[] img = Directory.GetFiles(path,"output_image*");
+            if (img.Length > 0)
+            {
+                string content = File.ReadAllText(outfilename2);
+                for (int i = 0; i < img.Length; i++)
+                {
+                    FileInfo fi = new FileInfo(img[i]);
+                    content = content.Replace(String.Format("{0}", fi.Name), "data:image/gif;base64," + Convert.ToBase64String(File.ReadAllBytes(img[i])));
+                    File.Delete(img[i]);
+                }
+                File.WriteAllText(outfilename2, content);
+            }
+          
+
             dynamic op = new ExpandoObject();
             byte[] output = File.ReadAllBytes(outfilename2);
 
@@ -124,7 +140,7 @@ public class CompareController : ApiController
             File.Delete(filename2);
             File.Delete(outfilename);
             File.Delete(outfilename2);
-            File.Delete(logfile);
+            File.Delete(logfile);            
 
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(output) };
         }
